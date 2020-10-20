@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t dwemer/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true dwemer/react-test npm test
+
+# make production images
+after_success:
+  - docker build -t dwemer/multi-client ./client
+  - docker build -t dwemer/multi-nginx ./nginx
+  - docker build -t dwemer/multi-server ./server
+  - docker build -t dwemer/multi-worker ./worker
+# log in to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# push images to docker hub
+  - docker push dwemer/multi-client
+  - docker push dwemer/multi-nginx
+  - docker push dwemer/multi-server
+  - docker push dwemer/multi-worker
